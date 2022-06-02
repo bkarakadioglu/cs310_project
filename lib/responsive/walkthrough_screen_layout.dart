@@ -3,7 +3,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sucial/utils/colors.dart';
-
 import 'package:sucial/utils/global_variables.dart';
 
 class WalkthroughScreenLayout extends StatefulWidget {

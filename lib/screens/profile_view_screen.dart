@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sucial/model/post.dart';
 import 'package:sucial/screens/add_post_screen.dart';
 import 'package:sucial/ui/post_card.dart';
+import 'package:sucial/utils/GoogleProvider.dart';
 import 'package:sucial/utils/colors.dart';
-import 'package:sucial/utils/dimensions.dart';
-import 'package:sucial/utils/screenSizes.dart';
 import 'package:sucial/utils/styles.dart';
 import 'package:sucial/screens/edit_profile_screen.dart';
 
@@ -53,12 +53,22 @@ class _ProfileViewState extends State<ProfileView> {
             Text(
               "username"
             ),
-            IconButton(
-               onPressed: () {
-
-                 Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfileScreen()));
-            },
-            icon: Icon(Icons.edit),
+            Row(
+              children: [
+                IconButton(
+                   onPressed: () {
+                     Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfileScreen()));
+                },
+                icon: Icon(Icons.edit),
+                ),
+                IconButton(
+                  onPressed: () async {
+                    final googleProvider = Provider.of<GoogleProvider>(context, listen: false);
+                    googleProvider.googleSignOut();
+                  },
+                  icon: Icon(Icons.logout)
+                )
+              ],
             ),
           ]
         ),

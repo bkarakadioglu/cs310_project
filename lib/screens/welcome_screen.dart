@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sucial/screens//login_screen.dart';
 import 'package:sucial/screens/signup_screen.dart';
-import 'package:sucial/screens/profile_view_screen.dart';
+import 'package:sucial/utils/GoogleProvider.dart';
 import 'package:sucial/utils/colors.dart';
-import 'package:sucial/utils/dimensions.dart';
 import 'package:sucial/utils/styles.dart';
-import 'package:sucial/responsive/mobile_screen_layout.dart';
-import 'package:sucial/responsive/responsive_layout_screen.dart';
+
 class Welcome extends StatelessWidget {
   const Welcome({Key? key}) : super(key: key);
 
@@ -26,7 +25,6 @@ class Welcome extends StatelessWidget {
                   text: TextSpan(
                     text: "SUcial",
                     style: kHeadingTextStyle,
-
                   ),
                 ),
               ),
@@ -37,7 +35,6 @@ class Welcome extends StatelessWidget {
                   children: <Widget>[
                     SizedBox(width: 40),
                     Expanded(
-
                       flex: 3,
                       child: OutlinedButton(
                           onPressed: () {
@@ -83,9 +80,12 @@ class Welcome extends StatelessWidget {
                         ),
 
                         child: IconButton(
-
                           icon: Image.network("https://cdn.icon-icons.com/icons2/729/PNG/128/google_icon-icons.com_62736.png"),
-                          onPressed: () {},
+                          onPressed: () async {
+                            final provider = Provider.of<GoogleProvider>(context,listen: false);
+                            await provider.googleLogin();
+                            Navigator.pushNamed(context, "/router");
+                          },
                         ),
                       ),
                     ),

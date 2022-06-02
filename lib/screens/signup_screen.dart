@@ -1,14 +1,10 @@
-
-
-//import 'dart:html';
-//import 'dart:ui';
-
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:sucial/utils/colors.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sucial/utils/FireStore.dart';
+import 'package:sucial/utils/Storage.dart';
 import 'package:sucial/widgets/text_field_input.dart';
-
-import '../responsive/mobile_screen_layout.dart';
 import '../utils/styles.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -25,6 +21,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _textController1 = TextEditingController();
   final TextEditingController _textController2 = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  var picLink = 'https://pic.onlinewebfonts.com/svg/img_241918.png';
 
   @override
   void dispose() {
@@ -32,85 +29,151 @@ class _SignupScreenState extends State<SignupScreen> {
     _textController.dispose();
     _passwordController.dispose();
   }
+
+  Future<String> getPic() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    if (sharedPreferences.containsKey("profPic")){
+      return sharedPreferences.getString("profPic")!;
+    }
+    else{
+      return picLink;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Container(
-          padding: EdgeInsets.all(50),
-          width: double.infinity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-
-            children: [
-              Flexible(
-                child: Container(),
-                flex: 2,
+    final Storage storage = Storage();
+    return WillPopScope(
+      onWillPop: () async {
+        SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+        await sharedPreferences.clear();
+        Navigator.pop(context);
+        return true;
+      },
+      child: Scaffold(
+        body: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: MediaQuery.of(context).size.width,
+              minHeight: MediaQuery.of(context).size.height,
+            ),
+            child: IntrinsicHeight(
+              child: Padding(
+                padding: const EdgeInsets.all(60.0),
+                child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(height: 60,),
+                            //Choose Photo Will Be implemented when Firebase is available
+                            Stack(
+                              children: [
+                                FutureBuilder<String>(
+                                  future: getPic(),
+                                  builder: (context, snapshot){
+                                    if(snapshot.hasData){
+                                      return CircleAvatar(
+                                            radius: 64,
+                                            backgroundColor: Colors.white,
+                                            backgroundImage: NetworkImage(snapshot.data!)
+                                        );
+                                    }
+                                    else {
+                                      return Center(child: CircularProgressIndicator());
+                                    }
+                                  }
+                                ),
+                                Positioned(
+                                  bottom: -8,
+                                  left: 90,
+                                  child: IconButton(
+                                    onPressed: () async {
+                                      final result = await FilePicker.platform.pickFiles(
+                                        allowMultiple: false,
+                                        type: FileType.custom,
+                                        allowedExtensions: ['png','jpg','jpeg']
+                                      );
+                                      if (result == null){
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text("Please Chose A File"))
+                                        );
+                                        return null;
+                                      }
+                                      else {
+                                        final path = result.files.single.path;
+                                        final fileName = result.files.single.name;
+                                        var storagePath = await storage.uploadFile(fileName, path!);
+                                        SharedPreferences sharedPreferences  = await SharedPreferences.getInstance();
+                                        sharedPreferences.setString("profPic", storagePath);
+                                        setState(() {});
+                                      }
+                                    },
+                                    icon: const Icon(Icons.add_a_photo),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 64),
+                            //text field input for display name
+                            TextFieldInput(
+                              textEditingController: _textController,
+                              hintText:
+                              'Display Name', /*textInputType: TextInputType.username*/
+                            ),
+                            const SizedBox(height: 12),
+                            //text field input for username
+                            TextFieldInput(
+                              textEditingController: _textController1,
+                              hintText: 'Username', /*textInputType: TextInputType.username*/
+                            ),
+                            const SizedBox(height: 12),
+                            //text field input for email (do not forget to check email)
+                            TextFieldInput(
+                              textEditingController: _textController2,
+                              hintText: 'Email', /*textInputType: TextInputType.username*/
+                            ),
+                            const SizedBox(height: 12),
+                            //text field input for password
+                            TextFieldInput(
+                              textEditingController: _passwordController,
+                              hintText: 'Password',
+                              /*textInputType: TextInputType.username,*/
+                              isPass: true
+                            ),
+                            const SizedBox(height: 12),
+                            //login button
+                            OutlinedButton(
+                                onPressed: () async {
+                                  //Navigator.push(context, MaterialPageRoute(builder: (context) => MobileScreenLayout()));
+                                  var x = FirebaseAuth.instance;
+                                  await x.createUserWithEmailAndPassword(email: _textController2.text, password: _passwordController.text).catchError((error)
+                                  {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(error!.toString()))
+                                    );
+                                  });
+                                  var fireHandle = fireStoreHandler();
+                                  await fireHandle.setUser().add({"email":_textController2.text, "displayName": _textController.text, "userName": _textController1.text, "userPic": await getPic(), "userLikes":0, "userPosts":{}, "userFollowers":0, "userFollowings": []}).catchError((error)
+                                  {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(error!.toString()))
+                                    );
+                                  });
+                                  Navigator.pushNamed(context, "/login_screen");
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 15.0),
+                                  child: Text(
+                                    'Signup',
+                                    style: kButtonLightTextStyle,
+                                  ),
+                                ),
+                                style: kOutlinedDarkButtonStyle
+                            ),
+                          ],
+                        ),
               ),
-              //Choose Photo Will Be implemented when Firebase is available
-              Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 64,
-                    backgroundImage: NetworkImage(
-                        'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.onlinewebfonts.com%2Ficon%2F241918&psig=AOvVaw14sDLK3I6bPoqgh6yc47rL&ust=1652892499499000&source=images&cd=vfe&ved=0CAwQjRxqFwoTCOjd95ah5_cCFQAAAAAdAAAAABAD'),
-                  ),
-                  Positioned(
-                    bottom: -8,
-                    left: 90,
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.add_a_photo),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 64),
-              //text field input for display name
-              TextFieldInput(
-                textEditingController: _textController,
-                hintText:
-                'Display Name', /*textInputType: TextInputType.username*/
-              ),
-              const SizedBox(height: 12),
-              //text field input for username
-              TextFieldInput(
-                textEditingController: _textController1,
-                hintText: 'Username', /*textInputType: TextInputType.username*/
-              ),
-              const SizedBox(height: 12),
-              //text field input for email (do not forget to check email)
-              TextFieldInput(
-                textEditingController: _textController2,
-                hintText: 'Email', /*textInputType: TextInputType.username*/
-              ),
-              const SizedBox(height: 12),
-              //text field input for password
-              TextFieldInput(
-                textEditingController: _passwordController,
-                hintText: 'Password',
-                /*textInputType: TextInputType.username,*/
-                isPass: true,
-              ),
-              const SizedBox(height: 12),
-              //login button
-              OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => MobileScreenLayout()));
-                    //Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileView()));
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 15.0),
-                    child: Text(
-                      'Signup',
-                      style: kButtonLightTextStyle,
-                    ),
-                  ),
-                  style: kOutlinedDarkButtonStyle
-
-              ),
-
-            ],
+            ),
           ),
         ),
       ),
