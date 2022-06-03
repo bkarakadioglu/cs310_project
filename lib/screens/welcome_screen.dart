@@ -5,9 +5,17 @@ import 'package:sucial/screens/signup_screen.dart';
 import 'package:sucial/utils/GoogleProvider.dart';
 import 'package:sucial/utils/colors.dart';
 import 'package:sucial/utils/styles.dart';
+import 'package:sucial/services/analytics.dart';
+
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 
 class Welcome extends StatelessWidget {
-  const Welcome({Key? key}) : super(key: key);
+  const Welcome({Key? key, required this.analytics}) : super(key: key);
+
+  final FirebaseAnalytics analytics;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +46,7 @@ class Welcome extends StatelessWidget {
                       flex: 3,
                       child: OutlinedButton(
                           onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen(analytics: analytics, observer: FirebaseAnalyticsObserver(analytics: analytics),)));
                           },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 15.0),
@@ -103,7 +111,7 @@ class Welcome extends StatelessWidget {
                     flex: 4,
                     child: OutlinedButton(
                         onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => SignupScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => SignupScreen(analytics: analytics, observer: FirebaseAnalyticsObserver(analytics: analytics))));
                           //Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileView()));
                         },
                         child: Padding(

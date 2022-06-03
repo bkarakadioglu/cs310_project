@@ -6,10 +6,15 @@ import 'package:sucial/utils/FireStore.dart';
 import 'package:sucial/utils/Storage.dart';
 import 'package:sucial/widgets/text_field_input.dart';
 import '../utils/styles.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:sucial/services/analytics.dart';
 
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({Key? key}) : super(key: key);
-
+  const SignupScreen({Key? key, required this.analytics, required this.observer}) : super(key: key);
+  final FirebaseAnalytics analytics;
+  final FirebaseAnalyticsObserver observer;
   @override
   State<SignupScreen> createState() => _SignupScreenState();
 
@@ -22,6 +27,17 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _textController2 = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   var picLink = 'https://pic.onlinewebfonts.com/svg/img_241918.png';
+
+  void setuserId(FirebaseAnalytics analytics, String userId){
+    widget.analytics.setUserId();
+  }
+  void setCurrentScreen(FirebaseAnalytics analytics, String screenName){
+    widget.analytics.setCurrentScreen(screenName: screenName);
+  }
+
+  Future <void> setLogEvent(FirebaseAnalytics analytics, String name)async{
+    await widget.analytics.logEvent(name: name);
+  }
 
   @override
   void dispose() {
@@ -144,6 +160,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             //login button
                             OutlinedButton(
                                 onPressed: () async {
+                                  await setLogEvent(widget.analytics, 'Register Process');
                                   //Navigator.push(context, MaterialPageRoute(builder: (context) => MobileScreenLayout()));
                                   var x = FirebaseAuth.instance;
                                   await x.createUserWithEmailAndPassword(email: _textController2.text, password: _passwordController.text).catchError((error)
@@ -151,6 +168,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(content: Text(error!.toString()))
                                     );
+
                                   });
                                   var fireHandle = fireStoreHandler();
                                   await fireHandle.setUser().add({"email":_textController2.text, "displayName": _textController.text, "userName": _textController1.text, "userPic": await getPic(), "userLikes":0, "userPosts":{}, "userFollowers":0, "userFollowings": []}).catchError((error)
@@ -159,6 +177,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                       SnackBar(content: Text(error!.toString()))
                                     );
                                   });
+                                  setCurrentScreen(widget.analytics, "Sign up Button Press");
                                   Navigator.pushNamed(context, "/login_screen");
                                 },
                                 child: Padding(

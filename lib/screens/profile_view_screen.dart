@@ -7,6 +7,10 @@ import 'package:sucial/utils/GoogleProvider.dart';
 import 'package:sucial/utils/colors.dart';
 import 'package:sucial/utils/styles.dart';
 import 'package:sucial/screens/edit_profile_screen.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:sucial/services/analytics.dart';
 
 class ProfileView extends StatefulWidget {
   ProfileView({Key? key}) : super(key: key);
@@ -57,7 +61,7 @@ class _ProfileViewState extends State<ProfileView> {
               children: [
                 IconButton(
                    onPressed: () {
-                     Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfileScreen()));
+                     Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfileScreen(analytics: FirebaseAnalytics.instance)));
                 },
                 icon: Icon(Icons.edit),
                 ),

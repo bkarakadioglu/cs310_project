@@ -1,6 +1,8 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:sucial/screens/welcome_screen.dart';
 import 'package:sucial/utils/styles.dart';
+import 'package:sucial/services/analytics.dart';
 
 class WalkthroughScreen1 extends StatelessWidget {
   const WalkthroughScreen1({Key? key}) : super(key: key);
@@ -178,7 +180,7 @@ class WalkthroughScreen4 extends StatelessWidget {
                     SizedBox(height: 20,),
                     OutlinedButton(
                         onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => Welcome()));
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => Welcome(analytics: FirebaseAnalytics.instance)));
                           //Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileView()));
                         },
                         child: Padding(

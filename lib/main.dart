@@ -7,13 +7,20 @@ import 'package:sucial/screens/login_screen.dart';
 import 'package:sucial/screens/profile_view_screen.dart';
 import 'package:sucial/screens/signup_screen.dart';
 import 'package:sucial/screens/edit_profile_screen.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:sucial/utils/GoogleProvider.dart';
 import 'package:sucial/utils/PartialRouter.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:sucial/services/analytics.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+  FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
+
   runApp(ChangeNotifierProvider(
     create: (context) => GoogleProvider(),
     child: MaterialApp(
@@ -22,13 +29,13 @@ void main() async {
       theme: ThemeData.dark(),
       home: WalkthroughScreenLayout(),
       routes: {
-        SignupScreen.routeName: (context) => SignupScreen(),
-        LoginScreen.routeName: (context) => LoginScreen(),
+        SignupScreen.routeName: (context) => SignupScreen(analytics:analytics, observer: observer,),
+        LoginScreen.routeName: (context) => LoginScreen(analytics:analytics, observer:observer),
         ProfileView.routeName: (context) => ProfileView(),
         MobileScreenLayout.routeName: (context) => MobileScreenLayout(),
-        EditProfileScreen.routeName: (context) => EditProfileScreen(),
+        EditProfileScreen.routeName: (context) => EditProfileScreen(analytics: analytics),
         AddPostScreen.routeName: (context) => AddPostScreen(),
-        '/router': (context) => partialRouter(),
+        '/router': (context) => partialRouter(analytics:analytics),
       },
     ),
   ));

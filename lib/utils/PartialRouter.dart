@@ -8,9 +8,14 @@ import 'package:sucial/screens/welcome_screen.dart';
 import 'package:sucial/utils/FireStore.dart';
 import 'package:sucial/utils/GoogleProvider.dart';
 import 'package:sucial/utils/LoadingScaff.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 
 class partialRouter extends StatelessWidget {
-  const partialRouter({Key? key}) : super(key: key);
+  const partialRouter({Key? key, required this.analytics}) : super(key: key);
+  final FirebaseAnalytics analytics;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +26,7 @@ class partialRouter extends StatelessWidget {
           return LoadingScaff();
         }
         else if (snapshot.hasError){
-          return Welcome();
+          return Welcome(analytics:analytics);
         }
         else if (snapshot.hasData) {
           GoogleProvider x = Provider.of<GoogleProvider>(context, listen: false);
@@ -45,13 +50,13 @@ class partialRouter extends StatelessWidget {
                 }
               }
               else{
-                return Welcome();
+                return Welcome(analytics:analytics);
               }
             },
           );
         }
         else {
-          return Welcome();
+          return Welcome(analytics:analytics);
         }
       }
     );

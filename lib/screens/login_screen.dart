@@ -4,10 +4,15 @@ import 'package:sucial/responsive/mobile_screen_layout.dart';
 import 'package:sucial/utils/styles.dart';
 
 import 'package:sucial/widgets/text_field_input.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:sucial/services/analytics.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
-
+  const LoginScreen({Key? key, required this.analytics, required this.observer}) : super(key: key);
+  final FirebaseAnalytics analytics;
+  final FirebaseAnalyticsObserver observer;
   @override
   _LoginScreenState createState() => _LoginScreenState();
   static const String routeName = '/login_screen';
@@ -16,6 +21,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  Future <void> setLogEvent(FirebaseAnalytics analytics, String name)async{
+    await widget.analytics.logEvent(name: name);
+  }
 
   @override
   void dispose(){
@@ -51,6 +60,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     //login button
                     OutlinedButton(
                         onPressed: () async {
+                          await setLogEvent(widget.analytics, 'Login Process');
+                          setCurrentScreen(widget.analytics, "Log in Press");
                           //Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileView()));
                           await FirebaseAuth.instance.signInWithEmailAndPassword(email: _usernameController.text, password: _passwordController.text);
                           Navigator.push(context, MaterialPageRoute(builder: (context) => MobileScreenLayout()));

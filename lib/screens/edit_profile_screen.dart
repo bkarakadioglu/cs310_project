@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:sucial/utils/colors.dart';
 import 'package:sucial/utils/screenSizes.dart';
@@ -5,8 +6,8 @@ import 'package:sucial/utils/styles.dart';
 import 'package:sucial/widgets/text_field_input.dart';
 import 'package:sucial/screens/profile_view_screen.dart';
 class EditProfileScreen extends StatefulWidget{
-  const EditProfileScreen({Key? key}) : super(key: key);
-
+  const EditProfileScreen({Key? key, required this.analytics}) : super(key: key);
+  final FirebaseAnalytics analytics;
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
 
