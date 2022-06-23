@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sucial/model/post.dart';
 import 'package:sucial/utils/colors.dart';
-
+/*
 class PostCard extends StatelessWidget {
 
   final Post post;
@@ -90,3 +90,4 @@ class PostCard extends StatelessWidget {
     );
   }
 }
+*/

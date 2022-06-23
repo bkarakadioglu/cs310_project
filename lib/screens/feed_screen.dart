@@ -1,53 +1,68 @@
-//import 'dart:html';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sucial/utils/colors.dart';
+import 'package:sucial/utils/global_variables.dart';
+import 'package:sucial/widgets/post_card.dart';
 
-import '../widgets/timeline_post_card.dart';
+import '../utils/colors.dart';
 
-class FeedScreen extends StatelessWidget {
+class FeedScreen extends StatefulWidget {
   const FeedScreen({Key? key}) : super(key: key);
 
   @override
+  State<FeedScreen> createState() => _FeedScreenState();
+}
+
+class _FeedScreenState extends State<FeedScreen> {
+  @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
     return Scaffold(
-      appBar: AppBar(
+      backgroundColor: mobileBackgroundColor,
+      appBar:
+          AppBar(
         backgroundColor: mobileBackgroundColor,
-        automaticallyImplyLeading: false,
         centerTitle: false,
-        title: const Text('timeline'),
+        title: SvgPicture.asset(
+          'assets/ic_instagram.svg',
+          color: primaryColor,
+          height: 32,
+        ),
         actions: [
           IconButton(
+            icon: const Icon(
+              Icons.messenger_outline,
+              color: primaryColor,
+            ),
             onPressed: () {},
-            icon: Icon(Icons.messenger_outline), //messages icon will be located in the appbar instead of bottom navigation, will be implemented when firebase is available
           ),
         ],
       ),
-      //body: const TimelinePostCard(), const TimelinePostCard(),
-      body:SafeArea(
-        child: Padding(
-            padding: const EdgeInsets.all(2.0),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const Divider(
-                    color: primaryColor,
-                    thickness: 0,
-                    height: 2,
-                  ),
-                  const TimelinePostCard(),
-                  const Divider(
-                    color: primaryColor,
-                    thickness: 0,
-                    height: 2,
-                  ),
-                  const TimelinePostCard(),
-                ],
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance.collection('posts').snapshots(),
+        builder: (context,
+            AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (ctx, index) => Container(
+              margin: EdgeInsets.symmetric(
+                horizontal:  0,
+                vertical: 0,
+              ),
+              child: PostCard(
+                snap: snapshot.data!.docs[index].data(),
               ),
             ),
-        )
-      )
-
+          );
+        },
+      ),
     );
   }
 }

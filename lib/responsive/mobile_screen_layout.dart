@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sucial/utils/colors.dart';
-
 import 'package:sucial/utils/global_variables.dart';
 
 class MobileScreenLayout extends StatefulWidget {
@@ -83,6 +82,7 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
 
             ],
             onTap: navigationTapped,
+            currentIndex: _page,
         ));
   }
 }

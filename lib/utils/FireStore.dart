@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:sucial/model/User.dart';
-
+import 'package:sucial/model/user.dart';
+/*
 class fireStoreHandler {
   Stream<QuerySnapshot> users() {
     return FirebaseFirestore.instance.collection("UserInfo").snapshots();
@@ -15,4 +15,4 @@ class fireStoreHandler {
     .map((snapshot) => snapshot.docs.map((doc) => UserObject.fromJson(doc.data())).toList());
   }
   
-}
+}*/

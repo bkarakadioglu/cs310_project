@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sucial/model/post.dart';
 import 'package:sucial/screens/add_post_screen.dart';
+import 'package:sucial/screens/welcome_screen.dart';
 import 'package:sucial/ui/post_card.dart';
 import 'package:sucial/utils/GoogleProvider.dart';
 import 'package:sucial/utils/colors.dart';
@@ -11,9 +12,20 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:sucial/services/analytics.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:sucial/resources/auth_methods.dart';
+import 'package:sucial/resources/firestore_methods.dart';
+import 'package:sucial/screens/login_screen.dart';
+import 'package:sucial/utils/colors.dart';
+import 'package:sucial/utils/utils.dart';
+import 'package:sucial/widgets/follow_button.dart';
 class ProfileView extends StatefulWidget {
-  ProfileView({Key? key}) : super(key: key);
+  final String uid;
+
+
+  const ProfileView({Key? key, required this.uid}) : super(key: key);
 
   @override
   _ProfileViewState createState() => _ProfileViewState();
@@ -22,32 +34,65 @@ class ProfileView extends StatefulWidget {
 }
 
 class _ProfileViewState extends State<ProfileView> {
-  List<Post> posts = [
-    Post(text: 'Hello World 1', date: 'March 31', likes: 10, comments: 0, imageURL: "https://static5.depositphotos.com/1037987/476/i/600/depositphotos_4767995-stock-photo-couple-giving-two-young-children.jpg"),
-    Post(text: 'Hello World 2', date: 'March 30', likes: 0, comments: 5, imageURL: "https://static5.depositphotos.com/1037987/476/i/600/depositphotos_4767995-stock-photo-couple-giving-two-young-children.jpg"),
-    Post(text: 'Hello World 3', date: 'March 29', likes: 20, comments: 10, imageURL: "https://static5.depositphotos.com/1037987/476/i/600/depositphotos_4767995-stock-photo-couple-giving-two-young-children.jpg"),
-    Post(text: 'Hello World 4', date: 'March 29', likes: 20, comments: 10, imageURL: "https://static5.depositphotos.com/1037987/476/i/600/depositphotos_4767995-stock-photo-couple-giving-two-young-children.jpg"),
-    Post(text: 'Hello World 5', date: 'March 29', likes: 20, comments: 10, imageURL: "https://static5.depositphotos.com/1037987/476/i/600/depositphotos_4767995-stock-photo-couple-giving-two-young-children.jpg"),
-  ];
-  int postCount = 0;
+  var userData = {};
+  int postLen = 0;
+  int followers = 0;
+  int following = 0;
+  bool isFollowing = false;
+  bool isLoading = false;
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
 
-  void deletePost(Post post) {
+  getData() async {
     setState(() {
-      posts.remove(post);
+      isLoading = true;
+    });
+    try {
+      var userSnap = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.uid)
+          .get();
+
+      // get post lENGTH
+      var postSnap = await FirebaseFirestore.instance
+          .collection('posts')
+          .where('uid', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+          .get();
+
+      postLen = postSnap.docs.length;
+      userData = userSnap.data()!;
+      followers = userSnap.data()!['followers'].length;
+      following = userSnap.data()!['following'].length;
+      isFollowing = userSnap
+          .data()!['followers']
+          .contains(FirebaseAuth.instance.currentUser!.uid);
+      setState(() {});
+    } catch (e) {
+      showSnackBar(
+        context,
+        e.toString(),
+      );
+    }
+    setState(() {
+      isLoading = false;
     });
   }
 
-  void buttonClicked() {
-    setState(() {
-      postCount++;
-    });
-  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
-    print('build');
 
-    return Scaffold(
+    return isLoading
+        ? const Center(
+      child: CircularProgressIndicator(),
+    ) :
+    Scaffold(
       appBar: AppBar(
 
         automaticallyImplyLeading: false, //for easier debug, in release should be changed to pushAndRemoveUntil
@@ -55,7 +100,7 @@ class _ProfileViewState extends State<ProfileView> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "username"
+              userData['username'],
             ),
             Row(
               children: [
@@ -105,24 +150,18 @@ class _ProfileViewState extends State<ProfileView> {
                       padding: const EdgeInsets.only(right: 16),
                       child: CircleAvatar(
                         backgroundColor: primaryColor,
-                       child: ClipRRect(
-                         borderRadius: BorderRadius.circular(45),
-                          child: Image.network(
-                            'https://static5.depositphotos.com/1037987/476/i/600/depositphotos_4767995-stock-photo-couple-giving-two-young-children.jpg',
-                            //fit: BoxFit.fitHeight,
-                          ),
-                       ),
+                        backgroundImage: NetworkImage(userData['photoUrl']),
                         radius: 45,
                       ),
                     ),
-
+                    SizedBox(width: 15,)    ,
                     Column(
                       mainAxisAlignment: MainAxisAlignment.start,
-                      children: const [
+                      children: [
                         Padding(
                           padding: const EdgeInsets.fromLTRB(0, 24, 0, 0),
                           child: Text(
-                            '345',
+                            postLen.toString(),
                             style: TextStyle(
                               fontSize: 20,
                             ),
@@ -135,30 +174,30 @@ class _ProfileViewState extends State<ProfileView> {
                         )
                       ],
                     ),
-
+                    SizedBox(width: 15,)    ,
                     Column(
                       mainAxisAlignment: MainAxisAlignment.start,
-                      children: const [
+                      children: [
                         Padding(
                           padding: EdgeInsets.fromLTRB(0, 24, 0, 0),
-                          child: Text('800',
+                          child: Text(followers.toString(),
                             style: TextStyle(
                               fontSize: 20,
                             ),),
                         ),
-                        Text('Follower',
+                        Text('Followers',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                           ),)
                       ],
                     ),
-
+                    SizedBox(width: 15,)    ,
                     Column(
                       mainAxisAlignment: MainAxisAlignment.start,
-                      children: const [
+                      children: [
                         Padding(
                           padding: const EdgeInsets.fromLTRB(0, 24, 0, 0),
-                          child: Text('650',
+                          child: Text(following.toString(),
                             style: TextStyle(
                               fontSize: 20,
                             ),),
@@ -170,17 +209,82 @@ class _ProfileViewState extends State<ProfileView> {
                       ],
                     ),
 
-                    const SizedBox(width: 8,),
+
+
                   ],
                 ),
 
                 SizedBox(height: 5),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    FirebaseAuth.instance.currentUser!.uid ==
+                        widget.uid
+                        ? FollowButton(
+                      text: 'Sign Out',
+                      backgroundColor:
+                      mobileBackgroundColor,
+                      textColor: primaryColor,
+                      borderColor: Colors.grey,
+                      function: () async {
+                        await AuthMethods().signOut();
+                        Navigator.of(context)
+                            .pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                Welcome(analytics: FirebaseAnalytics.instance),
+                          ),
+                        );
+                      },
+                    )
+                        : isFollowing
+                        ? FollowButton(
+                      text: 'Unfollow',
+                      backgroundColor: Colors.white,
+                      textColor: Colors.black,
+                      borderColor: Colors.grey,
+                      function: () async {
+                        await FireStoreMethods()
+                            .followUser(
+                          FirebaseAuth.instance
+                              .currentUser!.uid,
+                          userData['uid'],
+                        );
+
+                        setState(() {
+                          isFollowing = false;
+                          followers--;
+                        });
+                      },
+                    )
+                        : FollowButton(
+                      text: 'Follow',
+                      backgroundColor: Colors.blueGrey,
+                      textColor: Colors.white,
+                      borderColor: Colors.blue,
+                      function: () async {
+                        await FireStoreMethods()
+                            .followUser(
+                          FirebaseAuth.instance
+                              .currentUser!.uid,
+                          userData['uid'],
+                        );
+
+                        setState(() {
+                          isFollowing = true;
+                          followers++;
+                        });
+                      },
+                    )
+                  ],
+
+                ),
+                SizedBox(height: 5),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Display Name" , style: kBoldLabelStyle),
+                    Text("Bio" , style: kBoldLabelStyle),
                     SizedBox(height: 5),
-                    Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse posuere lectus libero, non hendrerit mauris placerat quis."),
+                    Text(userData['bio']),
 
                   ],
                 ),
@@ -191,24 +295,43 @@ class _ProfileViewState extends State<ProfileView> {
                   height: 20,
                 ),
 
-                /*GridView.count(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 5,
-                  mainAxisSpacing: 5,
-                  children: List.generate(posts.length, (index) {
-                    return Center(
-                      child: PostCard(post: posts[index], delete: () => deletePost(posts[index]),),
+                FutureBuilder(
+                  future: FirebaseFirestore.instance
+                      .collection('posts')
+                      .where('uid', isEqualTo: widget.uid)
+                      .get(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      itemCount: (snapshot.data! as dynamic).docs.length,
+                      gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 5,
+                        mainAxisSpacing: 1.5,
+                        childAspectRatio: 1,
+                      ),
+                      itemBuilder: (context, index) {
+                        DocumentSnapshot snap =
+                        (snapshot.data! as dynamic).docs[index];
+
+                        return Container(
+                          child: Image(
+                            image: NetworkImage(snap['postUrl']),
+                            fit: BoxFit.cover,
+                          ),
+                        );
+                      },
                     );
-                  }
-                  ),*/
-                Column(
-                  children: posts.map((post) => PostCard(
-                    post: post,
-                    delete: (){
-                      deletePost(post);
-                    },
-                  )).toList(),
-                ),
+                  },
+                )
+
 
               ],
             )

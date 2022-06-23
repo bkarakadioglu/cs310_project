@@ -1,13 +1,21 @@
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sucial/utils/FireStore.dart';
 import 'package:sucial/utils/GoogleProvider.dart';
 import 'package:sucial/utils/Storage.dart';
 import 'package:sucial/widgets/text_field_input.dart';
+import '../resources/auth_methods.dart';
+import '../responsive/mobile_screen_layout.dart';
+import '../responsive/responsive_layout_screen.dart';
+import '../utils/colors.dart';
 import '../utils/styles.dart';
+import '../utils/utils.dart';
 
 class GoogleSignupScreen extends StatefulWidget {
   const GoogleSignupScreen({Key? key}) : super(key: key);
@@ -19,29 +27,68 @@ class GoogleSignupScreen extends StatefulWidget {
 }
 
 class _GoogleSignupScreenState extends State<GoogleSignupScreen> {
-  final TextEditingController _textController = TextEditingController();
-  final TextEditingController _textController1 = TextEditingController();
-  final TextEditingController _textController2 = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  //final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  var picLink = 'https://pic.onlinewebfonts.com/svg/img_241918.png';
+  Uint8List? _image;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     super.dispose();
-    _textController.dispose();
     _passwordController.dispose();
+    _usernameController.dispose();
+
+    //_emailController.dispose();
   }
 
-  Future<String> getPic() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    if (sharedPreferences.containsKey("profPic")){
-      return sharedPreferences.getString("profPic")!;
-    }
-    else{
-      return picLink;
+
+
+  void signUpUser() async {
+    // set loading to true
+    setState(() {
+      _isLoading = true;
+    });
+    var gp = Provider.of<GoogleProvider>(context, listen: false);
+    // signup user using our authmethodds
+    String res = await AuthMethods().signUpUser(
+        email: gp.googleSignIn.currentUser!.email,
+        password: _passwordController.text,
+        username: _usernameController.text,
+        bio: _bioController.text,
+        file: _image!);
+    // if string returned is sucess, user has been created
+    if (res == "success") {
+      setState(() {
+        _isLoading = false;
+      });
+      // navigate to the home screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const ResponsiveLayout(
+            mobileScreenLayout: MobileScreenLayout(),
+            //webScreenLayout: WebScreenLayout(),
+          ),
+        ),
+      );
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      // show the error
+      showSnackBar(context, res);
     }
   }
 
+
+  selectImage() async {
+    Uint8List im = await pickImage(ImageSource.gallery);
+    // set state because we need to display the image we selected on the circle avatar
+    setState(() {
+      _image = im;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     final Storage storage = Storage();
@@ -70,20 +117,17 @@ class _GoogleSignupScreenState extends State<GoogleSignupScreen> {
                     //Choose Photo Will Be implemented when Firebase is available
                     Stack(
                       children: [
-                        FutureBuilder<String>(
-                            future: getPic(),
-                            builder: (context, snapshot){
-                              if(snapshot.hasData){
-                                return CircleAvatar(
-                                    radius: 64,
-                                    backgroundColor: Colors.white,
-                                    backgroundImage: NetworkImage(snapshot.data!)
-                                );
-                              }
-                              else {
-                                return Center(child: CircularProgressIndicator());
-                              }
-                            }
+                        _image != null
+                            ? CircleAvatar(
+                          radius: 64,
+                          backgroundImage: MemoryImage(_image!),
+                          backgroundColor: Colors.red,
+                        )
+                            : const CircleAvatar(
+                          radius: 64,
+                          backgroundImage: NetworkImage(
+                              'https://i.stack.imgur.com/l60Hf.png'),
+                          backgroundColor: Colors.red,
                         ),
                         Positioned(
                           bottom: -8,
@@ -116,38 +160,49 @@ class _GoogleSignupScreenState extends State<GoogleSignupScreen> {
                       ],
                     ),
                     const SizedBox(height: 64),
-                    //text field input for display name
-                    TextFieldInput(
-                      textEditingController: _textController,
-                      hintText:
-                      'Display Name', /*textInputType: TextInputType.username*/
-                    ),
-                    const SizedBox(height: 12),
+
                     //text field input for username
                     TextFieldInput(
-                      textEditingController: _textController1,
+                      textEditingController: _usernameController,
                       hintText: 'Username', /*textInputType: TextInputType.username*/
+                    ),
+                    /*const SizedBox(height: 12),
+                    //text field input for email (do not forget to check email)
+                    TextFieldInput(
+                      textEditingController: _emailController,
+                      hintText: 'Email', /*textInputType: TextInputType.username*/
+                    ),*/
+                    const SizedBox(height: 12),
+                    //text field input for password
+                    TextFieldInput(
+                        textEditingController: _passwordController,
+                        hintText: 'Password',
+                        /*textInputType: TextInputType.username,*/
+                        isPass: true
+                    ),
+                    const SizedBox(height: 12),
+                    //text field input for bio name
+                    TextFieldInput(
+                      textEditingController: _bioController,
+                      hintText:
+                      'Bio', /*textInputType: TextInputType.username*/
                     ),
                     const SizedBox(height: 12),
                     //login button
                     OutlinedButton(
-                        onPressed: () async {
-                          //Navigator.push(context, MaterialPageRoute(builder: (context) => MobileScreenLayout()));
-                          var gp = Provider.of<GoogleProvider>(context, listen: false);
-                          var fireHandle = fireStoreHandler();
-                          await fireHandle.setUser().add({"email":gp.googleSignIn.currentUser!.email, "displayName": _textController.text, "userName": _textController1.text, "userPic": await getPic(), "userLikes":0, "userPosts":{}, "userFollowers":0, "userFollowings": []}).catchError((error)
-                          {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(error!.toString()))
-                            );
-                          });
-                          Navigator.pushNamed(context, "/mobile_screen_layout");
+                        onPressed: ()  {
+                          //await setLogEvent(widget.analytics, 'Register Process');
+                          signUpUser();
+                          //setCurrentScreen(widget.analytics, "Sign up Button Press");
+                          Navigator.pushNamed(context, "/login_screen");
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 15.0),
-                          child: Text(
+                          child: !_isLoading ? Text(
                             'Signup',
                             style: kButtonLightTextStyle,
+                          ) : const CircularProgressIndicator(
+                            color: blueColor,
                           ),
                         ),
                         style: kOutlinedDarkButtonStyle

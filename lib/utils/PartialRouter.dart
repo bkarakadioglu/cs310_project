@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sucial/model/User.dart';
+import 'package:sucial/model/user.dart';
 import 'package:sucial/responsive/mobile_screen_layout.dart';
 import 'package:sucial/screens/googleSignUp.dart';
 import 'package:sucial/screens/welcome_screen.dart';
@@ -12,7 +12,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-
+/*
 class partialRouter extends StatelessWidget {
   const partialRouter({Key? key, required this.analytics}) : super(key: key);
   final FirebaseAnalytics analytics;
@@ -62,3 +62,4 @@ class partialRouter extends StatelessWidget {
     );
   }
 }
+*/
