@@ -15,7 +15,7 @@ import 'package:sucial/screens/search_screen.dart';
 List<Widget> homeScreenItems = [
   FeedScreen(), //the actual home screen where posts are shown
   SearchScreen(),
-  NotificationScreen(),
+  //NotificationScreen(),
   ProfileView(uid: FirebaseAuth.instance.currentUser!.uid),
 ];
 

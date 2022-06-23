@@ -149,7 +149,7 @@ class _PostCardState extends State<PostCard> {
                       },
                     );
                   },
-                  icon: const Icon(Icons.more_vert),
+                  icon: const Icon(Icons.delete),
                 )
                     : Container(),
               ],

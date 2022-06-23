@@ -9,6 +9,34 @@ import 'package:uuid/uuid.dart';
 class FireStoreMethods {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  Future<String> changeProfPic(String? uid, Uint8List file) async {
+    String photoUrl = await StorageMethods().uploadImageToStorage('profilePics', file, false);
+    String res = "Some error occurred";
+    try {
+        _firestore.collection('users').doc(uid).update({
+          'photoUrl': photoUrl,
+         });
+      res = 'success';
+    } catch (err) {
+      res = err.toString();
+    }
+    return res;
+  }
+
+  Future<String> changeBio(String? uid, String? bio) async {
+    String res = "Some error occurred";
+    try {
+      _firestore.collection('users').doc(uid).update({
+        'bio': bio,
+      });
+      res = 'success';
+    } catch (err) {
+      res = err.toString();
+    }
+    return res;
+  }
+
+
   Future<String> uploadPost(String description, Uint8List file, String uid,
       String username, String profImage) async {
     // asking uid here because we dont want to make extra calls to firebase auth when we can just get from our state management

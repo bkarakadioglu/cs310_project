@@ -84,15 +84,15 @@ class _ProfileViewState extends State<ProfileView> {
 
 
 
-
   @override
   Widget build(BuildContext context) {
+    
 
     return isLoading
         ? const Center(
-      child: CircularProgressIndicator(),
-    ) :
+      child: CircularProgressIndicator(),) :
     Scaffold(
+
       appBar: AppBar(
 
         automaticallyImplyLeading: false, //for easier debug, in release should be changed to pushAndRemoveUntil
@@ -112,9 +112,16 @@ class _ProfileViewState extends State<ProfileView> {
                 ),
                 IconButton(
                   onPressed: () async {
-                    final googleProvider = Provider.of<GoogleProvider>(context, listen: false);
-                    googleProvider.googleSignOut();
-                  },
+                    await AuthMethods().signOut();
+                    Navigator.of(context)
+                        .pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            Welcome(analytics: FirebaseAnalytics.instance),
+                      ),
+                    );
+                    },
+
                   icon: Icon(Icons.logout)
                 )
               ],
@@ -258,6 +265,7 @@ class _ProfileViewState extends State<ProfileView> {
                     )
                         : FollowButton(
                       text: 'Follow',
+
                       backgroundColor: Colors.blueGrey,
                       textColor: Colors.white,
                       borderColor: Colors.blue,
@@ -301,11 +309,11 @@ class _ProfileViewState extends State<ProfileView> {
                       .where('uid', isEqualTo: widget.uid)
                       .get(),
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
+                    // (snapshot.connectionState == ConnectionState.waiting) {
+                     // return const Center(
+                     //   child: CircularProgressIndicator(),
+                     // );
+                    //}
 
                     return GridView.builder(
                       shrinkWrap: true,

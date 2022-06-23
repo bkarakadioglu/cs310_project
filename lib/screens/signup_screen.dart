@@ -225,7 +225,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                   await setLogEvent(widget.analytics, 'Register Process');
                                   signUpUser();
                                   setCurrentScreen(widget.analytics, "Sign up Button Press");
-                                  Navigator.pushNamed(context, "/login_screen");
+                                  //Navigator.pushNamed(context, "/login_screen");
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 15.0),

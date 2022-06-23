@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           setCurrentScreen(widget.analytics, "Log in Press");
                           //Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileView()));
                           loginUser();
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => MobileScreenLayout()));
+                          //Navigator.push(context, MaterialPageRoute(builder: (context) => MobileScreenLayout()));
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 15.0),
